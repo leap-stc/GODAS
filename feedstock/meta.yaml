@@ -1,20 +1,21 @@
-title: "LEAP Data Library Prototype"
+title: "GODAS"
 description: >
-  A prototype test for the LEAP Data Library refactor
+  CEP Global Ocean Data Assimilation System (GODAS)
 recipes:
-  - id: "small"
-    object: "recipe:small"
-  - id: "large"
-    object: "recipe:large"
+  - id: "GODAS"
+    object: "godas:GODAS"
 provenance:
   providers:
-    - name: "Julius"
-      description: "Just a guy testing some recipes. Nothing to see here."
+    - name: "NOAA"
       roles:
         - producer
         - licensor
-  license: "Just a Test"
+      url: https://www.cpc.ncep.noaa.gov/products/GODAS/
+  license: ""
 maintainers:
   - name: "Julius Busecke"
     orcid: "0000-0001-8571-865X"
     github: jbusecke
+  - name: "Raphael Hagen"
+    orcid: "0000-0003-1994-1153"
+    github: norlandrhagen

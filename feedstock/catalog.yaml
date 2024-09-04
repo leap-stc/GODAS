@@ -1,16 +1,11 @@
 # All the information important to cataloging.
-"ncviewjs:meta_yaml_url": "https://github.com/leap-stc/proto_feedstock/blob/main/feedstock/meta.yaml" # !!! MAKE SURE TO POINT TO THIS REPOS meta.yaml !!!
+"ncviewjs:meta_yaml_url": "https://github.com/leap-stc/GODAS/blob/main/feedstock/meta.yaml"
 tags:
-  - my-custom-tag
   - zarr
+  - ocean
+  - NOAA
 stores:
-  - id: "small"
-    name: "The cool small Proto Dataset"
-    url: "gs://leap-scratch/data-library/feedstocks/proto_feedstock/small.zarr"
-    "ncviewjs:rechunking":
-      - path: "gs://some-bucket/small.zarr"
-        use_case: "multiscales"
-
-  - id: "large"
-    name: "The even cooler large Proto Dataset" # no pyramids
-    url: "gs://leap-scratch/data-library/feedstocks/proto_feedstock/large.zarr"
+  - id: "GODAS"
+    name: "GODAS"
+    description: "CEP Global Ocean Data Assimilation System (GODAS)"
+    url: "gs://leap-persistent/data-library/feedstocks/GODAS/GODAS.zarr"

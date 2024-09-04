@@ -2,78 +2,91 @@
 A synthetic prototype recipe
 """
 
-import os
 import apache_beam as beam
 from leap_data_management_utils.data_management_transforms import (
-    Copy,
-    InjectAttrs,
     get_catalog_store_urls,
 )
-from pangeo_forge_recipes.patterns import pattern_from_file_sequence
 from pangeo_forge_recipes.transforms import (
     OpenURLWithFSSpec,
     OpenWithXarray,
     StoreToZarr,
     ConsolidateMetadata,
     ConsolidateDimensionCoordinates,
+    Indexed,
+    T,
 )
+from pangeo_forge_recipes.patterns import ConcatDim, FilePattern, MergeDim
+
 
 # parse the catalog store locations (this is where the data is copied to after successful write (and maybe testing)
 catalog_store_urls = get_catalog_store_urls("feedstock/catalog.yaml")
+"""
+NCEP Global Ocean Data Assimilation System (GODAS)
+"""
 
-# if not run in a github workflow, assume local testing and deactivate the copy stage by setting all urls to False (see https://github.com/leap-stc/leap-data-management-utils/blob/b5762a17cbfc9b5036e1cd78d62c4e6a50c9691a/leap_data_management_utils/data_management_transforms.py#L121-L145)
-if os.getenv("GITHUB_ACTIONS") == "true":
-    print("Running inside GitHub Actions.")
-else:
-    print("Running locally. Deactivating final copy stage.")
-    catalog_store_urls = {k: False for k in catalog_store_urls.keys()}
 
-print("Final output locations")
-print(f"{catalog_store_urls=}")
-
-## Monthly version
-input_urls_a = [
-    "gs://cmip6/pgf-debugging/hanging_bug/file_a.nc",
-    "gs://cmip6/pgf-debugging/hanging_bug/file_b.nc",
+variables = [
+    "dbss_obil",
+    "dbss_obml",
+    "dzdt",
+    "pottmp",
+    "salt",
+    "sltfl",
+    "sshg",
+    "thflx",
+    "ucur",
+    "uflx",
+    "vcur",
+    "vflx",
 ]
-input_urls_b = [
-    "gs://cmip6/pgf-debugging/hanging_bug/file_a_huge.nc",
-    "gs://cmip6/pgf-debugging/hanging_bug/file_b_huge.nc",
-]
-
-pattern_a = pattern_from_file_sequence(input_urls_a, concat_dim="time")
-pattern_b = pattern_from_file_sequence(input_urls_b, concat_dim="time")
+years = range(1980, 2024)
 
 
-# small recipe
-small = (
-    beam.Create(pattern_a.items())
-    | OpenURLWithFSSpec()
-    | OpenWithXarray()
-    | StoreToZarr(
-        store_name="small.zarr",
-        # FIXME: This is brittle. it needs to be named exactly like in meta.yaml...
-        # Can we inject this in the same way as the root?
-        # Maybe its better to find another way and avoid injections entirely...
-        combine_dims=pattern_a.combine_dim_keys,
-    )
-    | InjectAttrs()
-    | ConsolidateDimensionCoordinates()
-    | ConsolidateMetadata()
-    | Copy(target=catalog_store_urls["small"])
+def make_full_path(variable, time):
+    return f"https://downloads.psl.noaa.gov/Datasets/godas/{variable}.{time}.nc"
+
+
+variable_merge_dim = MergeDim("variable", variables)
+time_concat_dim = ConcatDim("time", years)
+
+## preprocessing transform
+
+
+class Preprocess(beam.PTransform):
+    """
+    Set variables to be coordinates
+    """
+
+    @staticmethod
+    def _set_bnds_as_coords(item: Indexed[T]) -> Indexed[T]:
+        """
+        The netcdf lists some of the coordinate variables as data variables.
+        This is a fix which we want to apply to each dataset.
+        """
+        index, ds = item
+        new_coords_vars = ["date", "timePlot"]
+        ds = ds.set_coords(new_coords_vars)
+        return index, ds
+
+    def expand(self, pcoll: beam.PCollection) -> beam.PCollection:
+        return pcoll | beam.Map(self._set_bnds_as_coords)
+
+
+pattern = FilePattern(
+    make_full_path, variable_merge_dim, time_concat_dim, file_type="netcdf4"
 )
 
-# larger recipe
-large = (
-    beam.Create(pattern_b.items())
+GODAS = (
+    beam.Create(pattern.items())
     | OpenURLWithFSSpec()
-    | OpenWithXarray()
+    | OpenWithXarray(file_type=pattern.file_type)
+    | Preprocess()  # New preprocessor
     | StoreToZarr(
-        store_name="large.zarr",
-        combine_dims=pattern_b.combine_dim_keys,
+        target_chunks={"time": 120},
+        store_name="GODAS.zarr",
+        combine_dims=pattern.combine_dim_keys,
     )
-    | InjectAttrs()
     | ConsolidateDimensionCoordinates()
     | ConsolidateMetadata()
-    | Copy(target=catalog_store_urls["large"])
+    # | Copy(target=catalog_store_urls["small"])
 )
