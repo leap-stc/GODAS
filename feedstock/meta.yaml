@@ -2,8 +2,10 @@ title: "GODAS"
 description: >
   CEP Global Ocean Data Assimilation System (GODAS)
 recipes:
-  - id: "GODAS"
-    object: "godas:GODAS"
+  - id: "GODAS_surface"
+    object: "godas:GODAS_surface"
+  - id: "GODAS_multi"
+    object: "godas:GODAS_multi"
 provenance:
   providers:
     - name: "NOAA"

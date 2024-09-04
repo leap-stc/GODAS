@@ -5,7 +5,11 @@ tags:
   - ocean
   - NOAA
 stores:
-  - id: "GODAS"
-    name: "GODAS"
+  - id: "surface"
+    name: "GODAS Surface Level"
     description: "CEP Global Ocean Data Assimilation System (GODAS)"
-    url: "gs://leap-persistent/data-library/feedstocks/GODAS/GODAS.zarr"
+    url: "gs://leap-persistent/data-library/feedstocks/GODAS/GODAS_surface_level.zarr"
+  - id: "multi"
+    name: "GODAS Surface Level"
+    description: "CEP Global Ocean Data Assimilation System (GODAS)"
+    url: "gs://leap-persistent/data-library/feedstocks/GODAS/GODAS_multi_levels.zarr"
