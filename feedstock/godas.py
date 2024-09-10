@@ -1,44 +1,37 @@
-
-
 # pangeo-forge-runner bake --config configs/config_local_hub.py  --repo='.' --Bake.job_name=test --Bake.recipe_id 'GODAS_multi'
-import xarray as xr 
+import xarray as xr
 import apache_beam as beam
-from leap_data_management_utils.data_management_transforms import (
-    get_catalog_store_urls, Copy
-)
+from leap_data_management_utils.data_management_transforms import get_catalog_store_urls
 from pangeo_forge_recipes.transforms import (
     OpenURLWithFSSpec,
     OpenWithXarray,
     StoreToZarr,
     ConsolidateMetadata,
     ConsolidateDimensionCoordinates,
-
 )
 from pangeo_forge_recipes.patterns import ConcatDim, FilePattern, MergeDim
-
 
 
 catalog_store_urls = get_catalog_store_urls("feedstock/catalog.yaml")
 
 
-
 surface_level_vars = [
-"dbss_obil", # unknown
-"dbss_obml",#unknown
-"sltfl",#surface
-"sshg",#surface #
-"thflx",#surface
-"uflx",#surface
-"vflx" #surface
+    "dbss_obil",  # unknown
+    "dbss_obml",  # unknown
+    "sltfl",  # surface
+    "sshg",  # surface #
+    "thflx",  # surface
+    "uflx",  # surface
+    "vflx",  # surface
 ]
 
 
 multi_level_vars = [
-"dzdt", #multi
-"pottmp",#multi
-"salt",#multi
-"ucur",#multi
-"vcur",#multi
+    "dzdt",  # multi
+    "pottmp",  # multi
+    "salt",  # multi
+    "ucur",  # multi
+    "vcur",  # multi
 ]
 
 # does full surface work?
@@ -67,10 +60,10 @@ class Preprocess(beam.PTransform):
 
     @staticmethod
     def _set_bnds_as_coords(ds: xr.Dataset) -> xr.Dataset:
-        if 'level' not in ds.dims: # in ds?
-            ds = ds.transpose("time","lat","lon")
+        if "level" not in ds.dims:  # in ds?
+            ds = ds.transpose("time", "lat", "lon")
         else:
-            ds = ds.transpose("time","lat","lon", "level")
+            ds = ds.transpose("time", "lat", "lon", "level")
 
             # # if levels not present, assign surface level
             # ds = ds.expand_dims("level").assign_coords(level=("level", [0.0]))
@@ -86,6 +79,7 @@ class Preprocess(beam.PTransform):
             lambda k, v: (k, self._set_bnds_as_coords(v))
         )
 
+
 pattern_surface = FilePattern(
     make_full_path, variable_merge_dim_surface, time_concat_dim, file_type="netcdf4"
 )
@@ -98,23 +92,22 @@ GODASsurface = (
     beam.Create(pattern_surface.items())
     | OpenURLWithFSSpec()
     | OpenWithXarray(file_type=pattern_surface.file_type)
-    | Preprocess()  
+    | Preprocess()
     | StoreToZarr(
-        target_chunks={'time':20, 'lat':209, 'lon':180},
+        target_chunks={"time": 20, "lat": 209, "lon": 180},
         store_name="GODAS_surface_level.zarr",
         combine_dims=pattern_surface.combine_dim_keys,
     )
     | ConsolidateDimensionCoordinates()
     | ConsolidateMetadata()
     # | Copy(target=catalog_store_urls["surface"])
-
 )
 
 GODASmulti = (
     beam.Create(pattern_multi_lvl.items())
     | OpenURLWithFSSpec()
     | OpenWithXarray(file_type=pattern_multi_lvl.file_type)
-    | Preprocess()  
+    | Preprocess()
     | StoreToZarr(
         # target_chunks={'time':20, 'lat':209, 'lon':180, 'level':20},
         store_name="GODAS_multiple_levels.zarr",
@@ -123,6 +116,4 @@ GODASmulti = (
     | ConsolidateDimensionCoordinates()
     | ConsolidateMetadata()
     # | Copy(target=catalog_store_urls["multi"])
-
 )
-

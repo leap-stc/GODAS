@@ -1,24 +1,27 @@
 name: Deploy Recipes to Google Dataflow
 
-env:
-  JOB_NAME: ${{ github.event.inputs.recipe_id }}-${{ github.run_id }}-${{ github.run_attempt }}
-  # Can we sanitize the job name here to remove special characters?
-
 on:
   workflow_dispatch:
     inputs:
       recipe_id:
-        description: 'The id of a single recipe to submit to Dataflow'
+        description: 'recipe-id for dataflow. Make sure it starts with a lowercase letter, contains only lowercase letters, numbers, or hyphens. Has no underscores and be between 1 and 40 characters.'
         required: true
         default: 'all'
-        tags:
-          # - "v[0-9]+.[0-9]+"
-          - "^[a-z](?:[-0-9a-z]{0,38}[a-z0-9])?$"
+
+env:
+  JOB_NAME: ${{ github.event.inputs.recipe_id }}-${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
   deploy-recipes:
     runs-on: ubuntu-latest
     steps:
+      - name: Validate input
+        run: |
+          if ! [[ ${{ github.event.inputs.recipe_id }} =~ ^[a-z][-0-9a-z]{0,38}[a-z0-9]$ ]]; then
+            echo "Your recipe ID seems to be invalid. Check that it starts with a lowercase letter, contains only lowercase letters, numbers, or hyphens. Has no underscores and be between 1 and 40 characters."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
       - name: "Authenticate to Google Cloud"
         id: "auth"
