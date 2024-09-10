@@ -4,7 +4,7 @@ description: >
 recipes:
   - id: "godas-surface"
     object: "godas:GODASsurface"
-  - id: "godas-surface"
+  - id: "godas-multi"
     object: "godas:GODASmulti"
 provenance:
   providers:
