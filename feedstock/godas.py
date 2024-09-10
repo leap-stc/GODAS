@@ -1,7 +1,10 @@
 # pangeo-forge-runner bake --config configs/config_local_hub.py  --repo='.' --Bake.job_name=test --Bake.recipe_id 'GODAS_multi'
 import xarray as xr
 import apache_beam as beam
-from leap_data_management_utils.data_management_transforms import get_catalog_store_urls
+from leap_data_management_utils.data_management_transforms import (
+    get_catalog_store_urls,
+    Copy,
+)
 from pangeo_forge_recipes.transforms import (
     OpenURLWithFSSpec,
     OpenWithXarray,
@@ -42,7 +45,7 @@ multi_level_vars = [
 # test 2 years
 # test 2 vars all years
 
-years = range(1980, 1982)
+years = range(1980, 2023)
 
 
 def make_full_path(variable, time):
@@ -65,9 +68,9 @@ class Preprocess(beam.PTransform):
         # else:
         #     ds = ds.transpose("time", "lat", "lon", "level")
 
-            # # if levels not present, assign surface level
-            # ds = ds.expand_dims("level").assign_coords(level=("level", [0.0]))
-        ds = ds.drop_vars(['date','timePlot'])
+        # # if levels not present, assign surface level
+        # ds = ds.expand_dims("level").assign_coords(level=("level", [0.0]))
+        ds = ds.drop_vars(["date", "timePlot"])
         # new_coords_vars = ["date", "timePlot"]
         # ds = ds.set_coords(new_coords_vars)
         # import pdb; pdb.set_trace()
@@ -109,11 +112,11 @@ GODASmulti = (
     | OpenWithXarray(file_type=pattern_multi_lvl.file_type)
     | Preprocess()
     | StoreToZarr(
-        # target_chunks={'time':20, 'lat':209, 'lon':180, 'level':20},
+        target_chunks={"time": 20, "lat": 209, "lon": 180, "level": 20},
         store_name="GODAS_multiple_levels.zarr",
         combine_dims=pattern_multi_lvl.combine_dim_keys,
     )
     | ConsolidateDimensionCoordinates()
     | ConsolidateMetadata()
-    # | Copy(target=catalog_store_urls["multi"])
+    | Copy(target=catalog_store_urls["multi"])
 )
