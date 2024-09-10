@@ -31,7 +31,7 @@ jobs:
             --repo=${{ github.server_url }}/${{ github.repository }}.git \
             --ref=${{ github.sha }} \
             --feedstock-subdir='feedstock' \
-            --Bake.job_name=${{ env.JOB_NAME }} \
+            --Bake.job_name='test'} \
             --Bake.recipe_id=${{ github.event.inputs.recipe_id }} \
             -f configs/config_dataflow.py
         env:
