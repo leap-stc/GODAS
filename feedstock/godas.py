@@ -60,16 +60,16 @@ class Preprocess(beam.PTransform):
 
     @staticmethod
     def _set_bnds_as_coords(ds: xr.Dataset) -> xr.Dataset:
-        if "level" not in ds.dims:  # in ds?
-            ds = ds.transpose("time", "lat", "lon")
-        else:
-            ds = ds.transpose("time", "lat", "lon", "level")
+        # if "level" not in ds.dims:  # in ds?
+        #     ds = ds.transpose("time", "lat", "lon")
+        # else:
+        #     ds = ds.transpose("time", "lat", "lon", "level")
 
             # # if levels not present, assign surface level
             # ds = ds.expand_dims("level").assign_coords(level=("level", [0.0]))
-
-        new_coords_vars = ["date", "timePlot"]
-        ds = ds.set_coords(new_coords_vars)
+        ds = ds.drop_vars(['date','timePlot'])
+        # new_coords_vars = ["date", "timePlot"]
+        # ds = ds.set_coords(new_coords_vars)
         # import pdb; pdb.set_trace()
 
         return ds
