@@ -94,7 +94,7 @@ pattern_multi_lvl = FilePattern(
     make_full_path, variable_merge_dim_multi, time_concat_dim, file_type="netcdf4"
 )
 
-GODAS_surface = (
+GODASsurface = (
     beam.Create(pattern_surface.items())
     | OpenURLWithFSSpec()
     | OpenWithXarray(file_type=pattern_surface.file_type)
@@ -110,7 +110,7 @@ GODAS_surface = (
 
 )
 
-GODAS_multi = (
+GODASmulti = (
     beam.Create(pattern_multi_lvl.items())
     | OpenURLWithFSSpec()
     | OpenWithXarray(file_type=pattern_multi_lvl.file_type)
