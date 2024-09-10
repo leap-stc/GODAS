@@ -24,7 +24,7 @@ jobs:
       - name: "Install dependencies"
         run: |
           python -m pip install --upgrade pip
-          pip install pangeo-forge-runner==v0.10.2
+          pip install git+https://github.com/norlandrhagen/pangeo-forge-runner@job_name_regex
 
       - name: "Deploy recipes"
         run: |
