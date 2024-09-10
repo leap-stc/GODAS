@@ -51,20 +51,6 @@ variable_merge_dim_multi = MergeDim("variable", multi_level_vars)
 time_concat_dim = ConcatDim("time", years)
 
 
-class Preprocess(beam.PTransform):
-    """Custom transform to remove date&timePlot"""
-
-    @staticmethod
-    def _set_bnds_as_coords(ds: xr.Dataset) -> xr.Dataset:
-        ds = ds.drop_vars(["date", "timePlot"])
-
-        return ds
-
-    def expand(self, pcoll: beam.PCollection) -> beam.PCollection:
-        return pcoll | "Drops vars" >> beam.MapTuple(
-            lambda k, v: (k, self._set_bnds_as_coords(v))
-        )
-
 
 pattern_surface = FilePattern(
     make_full_path, variable_merge_dim_surface, time_concat_dim, file_type="netcdf4"
@@ -77,8 +63,7 @@ pattern_multi_lvl = FilePattern(
 GODASsurface = (
     beam.Create(pattern_surface.items())
     | OpenURLWithFSSpec()
-    | OpenWithXarray(file_type=pattern_surface.file_type)
-    | Preprocess()
+    | OpenWithXarray(file_type=pattern_surface.file_type, xarray_open_kwargs={'drop_variables':["date","timePlot"]})
     | StoreToZarr(
         store_name="GODAS_surface_level.zarr",
         target_chunks={"time": 720, "lat": 209, "lon": 180},
