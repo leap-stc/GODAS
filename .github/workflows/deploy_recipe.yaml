@@ -1,8 +1,7 @@
 name: Deploy Recipes to Google Dataflow
 
 env:
-  JOB_NAME: ${{ github.event.inputs.recipe_id }}-${{ github.run_id }}-${{ github.run_attempt }}
-  # Can we sanitize the job name here to remove special characters?
+  JOB_NAME: ${{ github.event.inputs.recipe_id }}
 
 on:
   workflow_dispatch:
