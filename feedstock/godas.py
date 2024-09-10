@@ -63,6 +63,8 @@ GODASsurface = (
     | OpenURLWithFSSpec()
     | OpenWithXarray(
         file_type=pattern_surface.file_type,
+        load=True,
+        copy_to_local=True,
         xarray_open_kwargs={"drop_variables": ["date", "timePlot"]},
     )
     | StoreToZarr(
@@ -80,6 +82,8 @@ GODASmulti = (
     | OpenURLWithFSSpec()
     | OpenWithXarray(
         file_type=pattern_multi_lvl.file_type,
+        load=True,
+        copy_to_local=True,
         xarray_open_kwargs={"drop_variables": ["date", "timePlot"]},
     )
     | StoreToZarr(
