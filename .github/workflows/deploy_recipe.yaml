@@ -22,7 +22,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: "Authenticate to Google Cloud"
         id: "auth"
         uses: "google-github-actions/auth@v2"
